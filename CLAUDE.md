@@ -8,6 +8,12 @@ with production intent from the first file.
 ## Repo
 - GitHub: https://github.com/viplav-artha/pg-admin (public, personal account `viplav-artha`, no org)
 - Local path: /Users/viplavsingh/Desktop/project/pg-admin
+- **All work (commits/pushes) happens on the `claude` branch, never directly on
+  `main`.** PR #1 (`claude` -> `main`) has already been merged once; that does
+  NOT mean it's now safe to commit to `main` — stay on `claude`, and open a new
+  PR when the next batch of work is ready to merge. Before any commit, confirm
+  with `git status`/`git branch` that the checked-out branch is `claude`, not
+  `main`.
 
 ## How this project is being taught/built (rules for any session, including a fresh one)
 - Teacher/student mode. Before writing any new file: explain WHY the file needs to
@@ -120,13 +126,17 @@ file is created, before moving on to the next lesson:
    - Only touch this graph if the new file contains actual import-relevant
      logic. Skip it for `.gitignore`, `.env`/`.env.example`, README,
      `requirements.txt`, and empty `__init__.py` files.
-   - If eligible: assign it the next number in the Routes Graph's own
-     sequence (independent from the Timeline number — see the note already
-     in NOTES.md explaining the two numbering systems are different).
-   - Draw an arrow from every internal project file it imports from, to it.
-     Use the fan-out/fan-in ASCII patterns already documented in NOTES.md
-     under "Routes Graph" if a file has multiple connections; use a plain
-     single `|`/`v` line for a simple one-to-one dependency.
+   - This is a **Mermaid** (` ```mermaid graph TD `) diagram — GitHub/VS Code
+     render it as a real flowchart. There is exactly ONE Routes Graph diagram
+     in NOTES.md. Add the new node and its edges to that SAME diagram in
+     place — never create a second Routes Graph elsewhere in the file.
+   - Assign the new node the next number in the Routes Graph's own sequence
+     (independent from the Timeline number — NOTES.md already explains the
+     two numbering systems are different), as part of its node label, e.g.
+     `n9["[9] filename"]`.
+   - Label each new edge with *what* it imports, e.g. `n2 -->|get_db| n6` —
+     this replaces needing a separate connections list, since Mermaid edge
+     labels carry that information directly in the diagram.
 4. **Update `NOTES.md` — File notes**:
    - Add a new `### [N] filename` entry with a `Motive` line and a `Logic`
      line. No analogies, no fluff — short and factual.

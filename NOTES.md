@@ -62,125 +62,54 @@ auth, tests.)
 
 ## Routes Graph (import / dependency connections)
 
-This graph is different from the Timeline above. The Timeline shows *every*
-file in the order it was created. The Routes Graph only shows files that
-actually contain import-relevant logic (no `.gitignore`, `.env`, README,
-`requirements.txt`, or empty `__init__.py` plumbing files) and draws an arrow
-from a file to every other file that imports it.
+This is ONE single graph covering the whole project — not the Timeline above,
+and not split into multiple smaller diagrams. It only includes files that
+contain real import-relevant logic (no `.gitignore`, `.env`, README,
+`requirements.txt`, or empty `__init__.py` plumbing files). Every arrow means
+"the file at the tail is imported by the file at the head," labeled with
+*what* it imports.
 
-The number on each node is its own sequence number **within this graph only**
-— it does NOT match the Timeline number for the same file. Example:
-`config.py` is file `[8]` in the Timeline (8th file created overall) but is
-node `1` here (1st file that participates in the import graph).
+The number in each node's label is this graph's own sequence number (1st,
+2nd, ... file to join the import graph) — it does NOT match the Timeline
+number for the same file above. Example: `config.py` is Timeline `[8]` but
+Routes Graph node `1`.
 
-Node/arrow convention used below:
+This is a **Mermaid diagram** — GitHub and VS Code render it automatically as
+an actual flowchart with boxes and arrows, not raw text. It's a living
+document: when a new file joins the import graph, add its node and edges to
+this SAME diagram in place. Never create a second Routes Graph elsewhere in
+this file.
 
-```
-Single dependency (A is imported by B):
+```mermaid
+graph TD
+    n1["[1] config.py"]
+    n2["[2] database.py"]
+    n3["[3] models.py"]
+    n4["[4] schemas.py"]
+    n5["[5] crud.py"]
+    n6["[6] app/routers/items.py"]
+    n7["[7] app/main.py"]
+    n8["[8] alembic/env.py"]
 
-      N
-   fileA.py
-      |
-      v
-      M
-   fileB.py
-
-One file imported by two others (fan-out):
-
-              N
-          fileA.py
-            /    \
-           v      v
-          M        K
-      fileB.py   fileC.py
-
-Two files imported by one (fan-in):
-
-      N          M
-   fileA.py   fileB.py
-        \        /
-         v      v
-            K
-        fileC.py
-```
-
-Current state:
-
-```
-      1
-  config.py
-      |
-      v
-      2
-  database.py
-      |
-      v
-      3
-  models.py
+    n1 -->|get_settings| n2
+    n1 -->|get_settings| n8
+    n2 -->|Base| n3
+    n2 -->|get_db| n6
+    n2 -->|Base| n8
+    n3 -->|Item| n5
+    n3 -->|registers Item on Base.metadata| n8
+    n4 -->|schema classes| n5
+    n4 -->|schema classes| n6
+    n5 -->|CRUD functions| n6
+    n6 -->|router| n7
 ```
 
-`database.py` imports `get_settings` from `config.py` (arrow `1 -> 2`).
-`models.py` imports `Base` from `database.py` (arrow `2 -> 3`).
-
-`schemas.py` is node `4`, with no arrow connecting it to `1`-`3` — it does not
-import from `models.py` or `database.py` on purpose (the API shape is kept
-independent of the DB layer).
-
-`crud.py` is node `5`, and it is the first **fan-in**: it imports from both
-`models.py` (node 3) and `schemas.py` (node 4).
-
-```
-      3          4
-  models.py  schemas.py
-        \        /
-         v      v
-            5
-        crud.py
-```
-
-`app/routers/items.py` is node `6`, and it's a three-way fan-in — it imports
-from `crud.py` (node 5), `schemas.py` (node 4, for request/response typing),
-and `database.py` (node 2, for `get_db`):
-
-```
-      2            4          5
-  database.py  schemas.py  crud.py
-        \           |          /
-         v          v         v
-                    6
-           app/routers/items.py
-```
-
-`app/main.py` was originally node `7`, a two-way fan-in from `database.py`
-(node 2) and `app/routers/items.py` (node 6). **This changed** when Alembic
-was introduced (see below) — `main.py` no longer imports `Base`/`engine` at
-all, so that edge is gone. `app/main.py` is now a single-dependency node:
-
-```
-      6
-  app/routers/items.py
-      |
-      v
-      7
-  app/main.py
-```
-
-`alembic/env.py` is node `8` — a three-way fan-in, importing `Base` from
-`database.py` (node 2), `get_settings` from `config.py` (node 1), and
-`app/models.py` (node 3, imported only so `Item` registers itself on
-`Base.metadata` — nothing from it is used directly):
-
-```
-      1            2            3
-  config.py   database.py   app/models.py
-        \          |           /
-         v         v          v
-                    8
-             alembic/env.py
-```
-
-Note: `alembic/env.py` lives outside the `app/` package but still
-participates in the import graph like any other code file.
+`[7] app/main.py` and `[8] alembic/env.py` have no outgoing arrows — nothing
+in the project imports from them. `[4] schemas.py` has no incoming arrows —
+it's a root, deliberately kept independent of the DB layer. Note:
+`app/main.py` used to also import `Base`/`engine` from `database.py`, but
+that edge was removed once Alembic took over schema management (see File
+notes `[17]`).
 
 ## File notes
 
