@@ -8,6 +8,12 @@ with production intent from the first file.
 ## Repo
 - GitHub: https://github.com/viplav-artha/pg-admin (public, personal account `viplav-artha`, no org)
 - Local path: /Users/viplavsingh/Desktop/project/pg-admin
+- **All work (commits/pushes) happens on the `claude` branch, never directly on
+  `main`.** PR #1 (`claude` -> `main`) has already been merged once; that does
+  NOT mean it's now safe to commit to `main` — stay on `claude`, and open a new
+  PR when the next batch of work is ready to merge. Before any commit, confirm
+  with `git status`/`git branch` that the checked-out branch is `claude`, not
+  `main`.
 
 ## How this project is being taught/built (rules for any session, including a fresh one)
 - Teacher/student mode. Before writing any new file: explain WHY the file needs to
